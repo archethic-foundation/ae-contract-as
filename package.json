@@ -1,6 +1,6 @@
 {
   "name": "@archethicjs/ae-contract-as",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "bin": {
     "aewasm": "bin/aewasm.js"
@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "prepublishOnly": "npm install --prefix transform && npm run build --prefix transform"
+    "prepublishOnly": "npm install --prefix transform && npm run build --prefix transform",
+    "postpublish": "rm -rf transform/dist"
   },
   "dependencies": {
     "@archethicjs/sdk": "^1.21.2",
