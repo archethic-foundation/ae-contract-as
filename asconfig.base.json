@@ -1,0 +1,14 @@
+{
+  "options": {
+    "use": [
+      "abort=~lib/@archethicjs/ae-contract-as/assembly/errors/abort"
+    ],
+    "transform": [
+      "./transform",
+      "json-as/transform"
+    ],
+    "entries": [
+      "./assembly/index.ts"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "@archethicjs/ae-contract-as",
+  "version": "1.0.0",
+  "description": "",
+  "bin": {
+    "aewasm": "bin/aewasm.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@archethicjs/sdk": "^1.21.2",
+    "commander": "^12.1.0",
+    "json-as": "^0.9.21",
+    "visitor-as": "^0.11.4"
+  },
+  "type": "module",
+  "types": "./assembly/index.ts",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "exports": {
+    ".": {
+      "default": "./index.ts",
+      "types": "./index.ts"
+    },
+    "./config": {
+      "default": "./asconfig.base.json"
+    },
+    "./transform": {
+      "default": "./transform"
+    }
+  }
+}
