@@ -1,18 +1,18 @@
-import { Transaction, TransactionBuilder } from "./transaction";
+import { TransactionResult, TransactionBuilder } from "./transaction";
 import { log as log_env, store_u8, alloc, set_output, set_error } from "./env";
 import { JSON } from "json-as";
 
 @json
-export class TransactionResult<T> {
+export class ActionResult<T> {
   state: T | null = null;
-  transaction: Transaction | null = null;
+  transaction: TransactionResult | null = null;
 
-  setTransaction(tx: TransactionBuilder): TransactionResult<T> {
-    this.transaction = tx.toTransaction();
+  setTransaction(tx: TransactionBuilder): ActionResult<T> {
+    this.transaction = tx.toTransactionResult();
     return this;
   }
 
-  setState(newState: T): TransactionResult<T> {
+  setState(newState: T): ActionResult<T> {
     this.state = newState;
     return this;
   }

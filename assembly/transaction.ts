@@ -1,4 +1,4 @@
-import { Address, BigInt } from "./utils";
+import { Address, BigInt, PublicKey } from "./utils";
 
 export const enum TransactionType {
   Contract = 249,
@@ -23,9 +23,15 @@ class TokenTransfer {
 }
 
 @json
-export class Transaction {
+export class TransactionResult {
   type!: TransactionType;
   data!: TransactionData;
+}
+
+@json
+export class Transaction extends TransactionResult {
+  address!: Address;
+  previousPublicKey!: PublicKey;
 }
 
 @json
@@ -93,7 +99,7 @@ export class TransactionBuilder {
     return this;
   }
 
-  toTransaction(): Transaction {
+  toTransactionResult(): TransactionResult {
     return {
       type: this.type,
       data: {
@@ -108,6 +114,6 @@ export class TransactionBuilder {
           },
         },
       },
-    } as Transaction;
+    } as TransactionResult;
   }
 }
