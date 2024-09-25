@@ -1,3 +1,5 @@
+export { u128Safe as BigInt } from "as-bignum/assembly";
+
 @json
 export class Nullable<T> {
   value: T

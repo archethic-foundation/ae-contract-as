@@ -1,4 +1,4 @@
-import { Address } from "./utils";
+import { Address, BigInt } from "./utils";
 
 export enum TransactionType {
   Contract = 249,
@@ -73,20 +73,20 @@ export class TransactionBuilder {
     return this;
   }
 
-  addUCOTransfer(to: Address, amount: u64): TransactionBuilder {
-    this.ucoTransfers.push({ to: to, amount: amount });
+  addUCOTransfer(to: Address, amount: BigInt): TransactionBuilder {
+    this.ucoTransfers.push({ to: to, amount: amount.toU64() });
     return this;
   }
 
   addTokenTransfer(
     to: Address,
-    amount: u64,
+    amount: BigInt,
     tokenAddress: Address,
     tokenId: i32,
   ): TransactionBuilder {
     this.tokenTransfers.push({
       to: to,
-      amount: amount,
+      amount: amount.toU64(),
       tokenAddress: tokenAddress,
       tokenId: tokenId,
     });
