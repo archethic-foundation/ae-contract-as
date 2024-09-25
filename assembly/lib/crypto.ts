@@ -1,7 +1,7 @@
 import * as JSONRPC from "../jsonrpc";
 import { Hex } from "../utils"
 
-export enum HashFunction {
+export const enum HashFunction {
     SHA256,
     SHA512,
     SHA3_256,

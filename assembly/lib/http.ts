@@ -20,7 +20,7 @@ export class HttpResponse {
     body: string;
 }
 
-export enum Method {
+export const enum Method {
     GET, //= "GET",
     PUT, //= "PUT",
     POST, //= "POST",

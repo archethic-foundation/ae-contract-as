@@ -1,6 +1,6 @@
 import { Address, BigInt } from "./utils";
 
-export enum TransactionType {
+export const enum TransactionType {
   Contract = 249,
   Transfer = 253,
   Data = 250,

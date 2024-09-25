@@ -47,7 +47,7 @@ export class Trigger {
   argument: string | null;
 }
 
-export enum TriggerType {
+export const enum TriggerType {
   Transaction,
   DateTime,
   Interval,
