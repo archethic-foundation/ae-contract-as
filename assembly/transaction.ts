@@ -1,4 +1,4 @@
-import { Address, BigInt, PublicKey } from "./utils";
+import { Address, BigInt, Hex, PublicKey } from "./utils";
 import { JSON } from "json-as"
 
 export namespace TransactionType {
@@ -43,6 +43,7 @@ export class TransactionData {
   code: string | null;
   ledger: Ledger = { uco: { transfers: [] }, token: { transfers: [] } };
   recipients: Recipient[] = []
+  ownerships: Ownership[] = []
 }
 
 @json
@@ -68,6 +69,12 @@ class Recipient {
   args: JSON.Raw
 }
 
+@json
+class Ownership {
+  secret!: Hex;
+  authorizedKeys: Map<PublicKey, Hex> = new Map<PublicKey, Hex>()
+}
+
 export class TransactionBuilder {
   type: TransactionType = TransactionType.Contract;
   content: string = "";
@@ -75,6 +82,7 @@ export class TransactionBuilder {
   ucoTransfers: UCOTransfer[] = [];
   tokenTransfers: TokenTransfer[] = [];
   recipients: Recipient[] = [];
+  ownerships: Ownership[] = [];
 
   setType(type: TransactionType): TransactionBuilder {
     this.type = type;
@@ -121,6 +129,11 @@ export class TransactionBuilder {
     return this;
   }
 
+  addOwnership(secret: Hex, authorizedKeys: Map<PublicKey, Hex>): TransactionBuilder {
+    this.ownerships.push({ secret, authorizedKeys });
+    return this;
+  }
+
   toTransactionResult(): TransactionResult {
     return {
       type: this.type,
@@ -135,7 +148,8 @@ export class TransactionBuilder {
             transfers: this.tokenTransfers
           },
         },
-        recipients: this.recipients
+        recipients: this.recipients,
+        ownerships: this.ownerships
       },
     } as TransactionResult;
   }
