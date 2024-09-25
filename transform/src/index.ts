@@ -229,14 +229,12 @@ export default class Transformer extends AeTransformer {
 
     this.triggers.forEach(({ name: name, type: triggerType, argument: triggerArgument }) => {
       const paramValues = this.parameters.get(name)
-      if (paramValues) {
-        manifest.abi.functions[name] = {
-          type: "action",
-          triggerType: triggerType,
-          triggerArgument: triggerArgument,
-          input: mapToObject(paramValues)
+      manifest.abi.functions[name] = {
+        type: "action",
+        triggerType: triggerType,
+        triggerArgument: triggerArgument,
+        input:  paramValues ? mapToObject(paramValues) : undefined,
         }
-      }
     })
 
     this.publicFunctions.forEach((fn: string) => {
