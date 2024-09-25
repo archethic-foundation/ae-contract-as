@@ -160,16 +160,16 @@ class AeTransformer extends TransformVisitor {
       const functionCallWithoutContext = returnType == "void" ? "inner()" : `const result: ${returnType} = inner() \n sendResult(result)`
 
       if (inputType != null) {
-        const match = inputType.match("(?<=<)[^>]+(?=>)")
-        if (match != null) {
+        // const match = inputType.match("(?<=<)[^>]+(?=>)")
+        // if (match != null) {
           body = `
             export function ${name}(): void {
               ${utils.toString(inner)}
-              const context = getContext<${match[0]}>();
+              const context = getContext<${inputType}>();
               ${functionCallWithContext}
             }
           `;
-        }
+        // }
       }
       else {
         body = `

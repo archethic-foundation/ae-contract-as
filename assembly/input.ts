@@ -7,19 +7,27 @@ interface Object { }
 export interface NoArgs extends Object { }
 
 @json
-export class Context<T, X> {
+export class Context<T> {
   state!: T;
-  @omitnull()
-  transaction!: Transaction | null;
-  @omitnull()
-  arguments!: X | null;
   balance: Balance = { uco: 0, token: [] }
 }
 
-export function getContext<T extends Object, X extends Object>(): Context<
-  T,
-  X
-> {
+@json
+export class ContextWithTransaction<T> extends Context<T> {
+  transaction!: Transaction;
+}
+
+@json
+export class ContextWithParams<T, X> extends Context<T> {
+  arguments!: X;
+}
+
+@json
+export class ContextWithTransactionAndParams<T, X> extends ContextWithTransaction<T> {
+  arguments!: X;
+}
+
+export function getContext<T>(): T {
   const size = input_size() as i32;
   const data = new Uint8Array(size);
   for (let i = 0; i < size; i++) {
@@ -27,5 +35,5 @@ export function getContext<T extends Object, X extends Object>(): Context<
   }
 
   const stringInput: string = String.UTF8.decode(data.buffer);
-  return JSON.parse<Context<T, X>>(stringInput);
+  return JSON.parse<T>(stringInput);
 }
