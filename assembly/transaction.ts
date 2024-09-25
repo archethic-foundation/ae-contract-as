@@ -1,4 +1,5 @@
 import { Address, BigInt, PublicKey } from "./utils";
+import { JSON } from "json-as"
 
 export namespace TransactionType {
   export const Contract = "contract";
@@ -41,6 +42,7 @@ export class TransactionData {
   content: string = "";
   code: string | null;
   ledger: Ledger = { uco: { transfers: [] }, token: { transfers: [] } };
+  recipients: Recipient[] = []
 }
 
 @json
@@ -59,12 +61,20 @@ class TokenLedger {
   transfers!: TokenTransfer[];
 }
 
+@json
+class Recipient {
+  address!: Address;
+  action: string | null;
+  args: JSON.Raw
+}
+
 export class TransactionBuilder {
   type: TransactionType = TransactionType.Contract;
   content: string = "";
   code: string | null;
   ucoTransfers: UCOTransfer[] = [];
   tokenTransfers: TokenTransfer[] = [];
+  recipients: Recipient[] = [];
 
   setType(type: TransactionType): TransactionBuilder {
     this.type = type;
@@ -101,6 +111,16 @@ export class TransactionBuilder {
     return this;
   }
 
+  addRawRecipient(address: Address, actionName: string, arg: JSON.Raw): TransactionBuilder {
+    this.recipients.push({ address: address, action: actionName, args: arg});
+    return this;
+  }
+
+  addRecipient<T>(address: Address, actionName: string, arg: T): TransactionBuilder {
+    this.recipients.push({ address: address, action: actionName, args: JSON.stringify([arg])});
+    return this;
+  }
+
   toTransactionResult(): TransactionResult {
     return {
       type: this.type,
@@ -115,6 +135,7 @@ export class TransactionBuilder {
             transfers: this.tokenTransfers
           },
         },
+        recipients: this.recipients
       },
     } as TransactionResult;
   }
