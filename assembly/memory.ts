@@ -1,18 +1,4 @@
-// export function write(s: Uint8Array): u64 {
-//   const ptr = heap.alloc(s.byteLength);
-//   const length = writeFromPointer(s, ptr);
-//   return (u64(ptr) << 32) | length;
-// }
-
 import { load_u8 } from "./env";
-
-// export function writeFromPointer(s: Uint8Array, ptr: usize): usize {
-//   const length = s.byteLength;
-//   for (let i = 0; i < length; i++) {
-//     store<u8>(ptr + i, s[i]);
-//   }
-//   return length;
-// }
 
 export function readCombinedPointer(combinedPointer: u64): Uint8Array {
   const pos = u32(combinedPointer >> 32);

@@ -160,8 +160,6 @@ class AeTransformer extends TransformVisitor {
       const functionCallWithoutContext = returnType == "void" ? "inner()" : `const result: ${returnType} = inner() \n sendResult(result)`
 
       if (inputType != null) {
-        // const match = inputType.match("(?<=<)[^>]+(?=>)")
-        // if (match != null) {
           body = `
             export function ${name}(): void {
               ${utils.toString(inner)}
@@ -169,7 +167,6 @@ class AeTransformer extends TransformVisitor {
               ${functionCallWithContext}
             }
           `;
-        // }
       }
       else {
         body = `
@@ -272,100 +269,6 @@ function mapToObject(map: Map<string, any>): Record<string, any> {
   return obj
 }
 
-// class SpecTransformer extends TransformVisitor {
-//   typedParameters: Map<string, classTypes> = new Map<string, classTypes>()
-
-//   constructor(parameters: Map<string, classTypes>) {
-//     super()
-//     this.typedParameters = parameters
-//   }
-
-
-//   visitFunctionDeclaration(node: FunctionDeclaration, isDefault?: boolean): FunctionDeclaration {
-//     if (utils.getName(node) == "spec") {
-//       const funcBody = node.body
-//       if (funcBody != null) {
-//         const body = funcBody as BlockStatement
-//         const resultVarStatement = body.statements[1] as VariableStatement
-//         const resultDeclaration = resultVarStatement.declarations[0] as VariableDeclaration
-
-//         let specCallStatement: Statement;
-//         if (this.typedParameters.size > 0) {
-
-//           const functionABIEXpressions: Expression[] = []
-//           for (let [key, value] of this.typedParameters) {
-//             functionABIEXpressions.push(Expression.createObjectLiteralExpression(
-//               [Expression.createIdentifierExpression("name", node.range), Expression.createIdentifierExpression("input", node.range)],
-//               [Expression.createStringLiteralExpression(key, node.range), Expression.createArrayLiteralExpression(typeParametersToExpression(value, node), node.range)],
-//               node.range
-//             ))
-//           }
-
-//           const newExp = Expression.createCallExpression(
-//             Expression.createPropertyAccessExpression(
-//               resultDeclaration.initializer as CallExpression,
-//               Expression.createIdentifierExpression("setABI", node.range),
-//               node.range
-//             ),
-//             null,
-//             [Expression.createObjectLiteralExpression([
-//               Expression.createIdentifierExpression("functions", node.range)
-//             ], [
-//               Expression.createArrayLiteralExpression(functionABIEXpressions, node.range)
-//             ], node.range)],
-//             node.range
-//           )
-
-//           let newStatement = utils.cloneNode(resultVarStatement)
-//           let varDec = (newStatement.declarations[0] as VariableDeclaration)
-//           varDec.initializer = newExp
-//           newStatement.declarations = [varDec]
-
-//           specCallStatement = newStatement
-//         }
-//         else {
-//           specCallStatement = body.statements[1] as Statement
-//         }
-
-//         const statements: Statement[] = [
-//           body.statements[0] as Statement,
-//           // body.statements[1] as Statement,
-
-//           specCallStatement,
-
-//           // body.statements[1] as Statement,
-//           body.statements[2] as Statement
-//         ]
-
-//         node.body = Expression.createBlockStatement(statements, node.range)
-
-//         // const result = exp ? utils.toString(exp) : "")
-//         // console.log(utils.toString(exp))
-//         // const exp = body.statements[0] as ExpressionStatement
-//         // const fnExp = exp.expression as FunctionExpression
-//         // const fn = fnExp.declaration as FunctionDeclaration
-//         // const fnBlock = fn.body as BlockStatement
-//         // const returnStatement = fnBlock.statements[fnBlock.statements.length - 1] as ReturnStatement
-//         // let call = returnStatement.value as CallExpression
-
-//         // call = Expression.createCallExpression(
-//         //   Expression.createPropertyAccessExpression(
-//         //     utils.cloneNode(call),
-//         //     Expression.createIdentifierExpression("addPublicFunction", node.range),
-//         //     node.range
-//         //   ),
-//         //   null,
-//         //   [
-//         //     Expression.createStringLiteralExpression("abc", node.range)
-//         //   ],
-//         //   node.range
-//         // )
-//       }
-//     }
-//     return node
-//   }
-// }
-
 type classTypes = Map<string, string | classTypes>
 
 function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): classTypes | null {
@@ -391,56 +294,3 @@ function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): cla
   }
   return null
 }
-
-// function typeParametersToExpression(parameters: classTypes, node: Node): ObjectLiteralExpression[] {
-//   const expressions = []
-//   for (let [key, value] of parameters) {
-//     if (typeof value == 'string') {
-//       expressions.push(Expression.createObjectLiteralExpression(
-//         [Expression.createIdentifierExpression("name", node.range), Expression.createIdentifierExpression("value", node.range)],
-//         [Expression.createStringLiteralExpression(key, node.range), Expression.createStringLiteralExpression(value, node.range)],
-//         node.range
-//       ))
-//     }
-//     if (typeof value == "object") {
-//       expressions.push(Expression.createObjectLiteralExpression(
-//         [Expression.createIdentifierExpression("name", node.range), Expression.createIdentifierExpression("value", node.range), Expression.createIdentifierExpression("items", node.range)],
-//         [Expression.createStringLiteralExpression(key, node.range), Expression.createStringLiteralExpression("object", node.range), Expression.createArrayLiteralExpression(typeParametersToExpression(value, node), node.range)],
-//         node.range
-//       ))
-
-//     }
-//   }
-//   return expressions
-// }
-
-// function generateSpecFunction(parameters, source) {
-// new SpecTransformer(this.parameters).visit(source)
-
-// const specBody = `export function spec(): void {
-//   const spec = new Spec()
-//   ${this.triggers.map(({ name: name, triggerType: triggerType, triggerArg: triggerArg}) => {
-//     if (triggerArg !== undefined) {
-//       return `.addTrigger("${name}", TriggerType.${triggerType}, "${triggerArg}")`
-//     }
-//     return `.addTrigger("${name}", TriggerType.${triggerType})`
-//   }).join("\n")}
-//   ${this.publicFunctions.map((fn) => {
-//     return `.addPublicFunction("${fn}")`
-//   }).join("\n")}
-
-//   sendResult(spec)
-// }`
-
-// const tokenizer = new Tokenizer(
-//   new Source(
-//     /* SourceKind.User */ 0,
-//     source.internalPath,
-//     specBody,
-//   ))
-//   const specFn = this.parser.parseTopLevelStatement(
-//     tokenizer,
-//   ) as FunctionDeclaration
-
-//   source.statements.push(specFn)
-// }
