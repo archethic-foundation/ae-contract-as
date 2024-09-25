@@ -214,7 +214,7 @@ export default class Transformer extends AeTransformer {
 
     type functionABI = {
       type: string;
-      input: Record<string, any>,
+      input?: Record<string, any>,
       output?: any
     }
 
@@ -242,12 +242,10 @@ export default class Transformer extends AeTransformer {
     this.publicFunctions.forEach((fn: string) => {
       const paramValues = this.parameters.get(fn)
       const returnType = this.returnTypes.get(fn)
-      if (paramValues) {
-        manifest.abi.functions[fn] = {
-          type: "publicFunction",
-          input: mapToObject(paramValues),
-          output: returnType ? typeof(returnType) == "string" ? returnType : mapToObject(returnType) : "null"
-        }
+      manifest.abi.functions[fn] = {
+        type: "publicFunction",
+        input: paramValues ? mapToObject(paramValues) : undefined,
+        output: returnType ? typeof(returnType) == "string" ? returnType : mapToObject(returnType) : "null"
       }
     })
 
