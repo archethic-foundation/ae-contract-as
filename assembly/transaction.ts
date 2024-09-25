@@ -1,11 +1,13 @@
 import { Address, BigInt, PublicKey } from "./utils";
 
-export const enum TransactionType {
-  Contract = 249,
-  Transfer = 253,
-  Data = 250,
-  Token = 251,
+export namespace TransactionType {
+  export const Contract = "contract";
+  export const Transfer = "transfer";
+  export const Data = "data";
+  export const Token = "token";
 }
+  
+export type TransactionType = string;
 
 @json
 class UCOTransfer {
