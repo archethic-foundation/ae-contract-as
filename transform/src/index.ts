@@ -35,6 +35,7 @@ class AeTransformer extends TransformVisitor {
   sb: string[] = [];
   classes: ClassDeclaration[] = [];
   parameters: Map<string, classTypes> = new Map<string, classTypes>()
+  returnTypes: Map<string, string | classTypes> = new Map<string, string | classTypes>()
   stateType?: classTypes;
 
   constructor(parser: Parser) {
@@ -95,15 +96,26 @@ class AeTransformer extends TransformVisitor {
           if (contextArguments[0] != null) {
             const argType = contextArguments[0] as NamedTypeNode
             const members = getClassTypes(this.classes, argType)
-            if (!this.stateType) {
+            if (!this.stateType && members) {
               this.stateType = members
             }
           }
           if (contextArguments[1] != null) {
             const argType = contextArguments[1] as NamedTypeNode
             const members = getClassTypes(this.classes, argType)
-            this.parameters.set(name, members)
+            if (members) {
+              this.parameters.set(name, members)
+            }
           }
+        }
+
+        const returnType = node.signature.returnType as NamedTypeNode
+        const customType = getClassTypes(this.classes, returnType)
+        if (customType) {
+          this.returnTypes.set(name, customType)
+        }
+        else {
+          this.returnTypes.set(name, utils.getName(returnType))
         }
       }
 
@@ -202,7 +214,8 @@ export default class Transformer extends AeTransformer {
 
     type functionABI = {
       type: string;
-      input: Record<string, any>
+      input: Record<string, any>,
+      output?: any
     }
 
     const manifest: {
@@ -228,10 +241,12 @@ export default class Transformer extends AeTransformer {
 
     this.publicFunctions.forEach((fn: string) => {
       const paramValues = this.parameters.get(fn)
+      const returnType = this.returnTypes.get(fn)
       if (paramValues) {
         manifest.abi.functions[fn] = {
           type: "publicFunction",
-          input: mapToObject(paramValues)
+          input: mapToObject(paramValues),
+          output: returnType ? typeof(returnType) == "string" ? returnType : mapToObject(returnType) : "null"
         }
       }
     })
@@ -357,25 +372,28 @@ function mapToObject(map: Map<string, any>): Record<string, any> {
 
 type classTypes = Map<string, string | classTypes>
 
-function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): classTypes {
-  let members: classTypes = new Map<string, classTypes>()
+function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): classTypes | null {
   const argClass = classes.find(x => utils.getName(x) == utils.getName(argType))
   if (argClass) {
+    let members: classTypes = new Map<string, classTypes>()
     argClass.members.forEach((member) => {
       const m = (member as FieldDeclaration).type
       if (m != null) {
         const namedNode = m as NamedTypeNode
         const typeName = utils.getTypeName(namedNode.name)
         if (classes.find(x => utils.getName(x) == typeName)) {
-          members.set(utils.getName(member), getClassTypes(classes, namedNode))
+          const nestedType = getClassTypes(classes, namedNode)
+          if (nestedType) {
+            members.set(utils.getName(member), nestedType)
+          }
         } else {
           members.set(utils.getName(member), typeName)
         }
-
       }
+      return members
     })
   }
-  return members
+  return null
 }
 
 // function typeParametersToExpression(parameters: classTypes, node: Node): ObjectLiteralExpression[] {
