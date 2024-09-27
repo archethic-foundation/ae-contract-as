@@ -34,9 +34,9 @@ class AeTransformer extends TransformVisitor {
   publicFunctions: string[] = []
   sb: string[] = [];
   classes: ClassDeclaration[] = [];
-  parameters: Map<string, classTypes> = new Map<string, classTypes>()
-  returnTypes: Map<string, string | classTypes> = new Map<string, string | classTypes>()
-  stateType?: classTypes;
+  parameters: Map<string, typeValue> = new Map<string, classType>()
+  returnTypes: Map<string, typeValue> = new Map<string, classType>()
+  stateType?: Map<string, typeValue>
 
   constructor(parser: Parser) {
     super()
@@ -102,20 +102,29 @@ class AeTransformer extends TransformVisitor {
           }
           if (contextArguments[1] != null) {
             const argType = contextArguments[1] as NamedTypeNode
-            const members = getClassTypes(this.classes, argType)
-            if (members) {
-              this.parameters.set(name, members)
+            if (argType.typeArguments && argType.typeArguments.length > 0) {
+              const args = argType.typeArguments
+                .map(x => getClassTypes(this.classes, x as NamedTypeNode) || utils.getName(x))
+    
+              this.parameters.set(name, args)
+            }
+            else {
+              const members = getClassTypes(this.classes, argType)
+              this.parameters.set(name, members || utils.getName(argType))
             }
           }
         }
 
         const returnType = node.signature.returnType as NamedTypeNode
-        const customType = getClassTypes(this.classes, returnType)
-        if (customType) {
-          this.returnTypes.set(name, customType)
+        if (returnType.typeArguments && returnType.typeArguments.length > 0) {
+          const args = returnType.typeArguments
+            .map(x => getClassTypes(this.classes, x as NamedTypeNode) || utils.getName(x))
+
+          this.returnTypes.set(name, args)
         }
         else {
-          this.returnTypes.set(name, utils.getName(returnType))
+          const customType = getClassTypes(this.classes, returnType)
+          this.returnTypes.set(name, customType || utils.getName(returnType))
         }
       }
 
@@ -211,7 +220,7 @@ export default class Transformer extends AeTransformer {
 
     type functionABI = {
       type: string;
-      input?: Record<string, any>,
+      input?: Record<string, any> | string | (Record<string, any> | string)[],
       output?: any
     }
 
@@ -226,21 +235,23 @@ export default class Transformer extends AeTransformer {
 
     this.triggers.forEach(({ name: name, type: triggerType, argument: triggerArgument }) => {
       const paramValues = this.parameters.get(name)
+
       manifest.abi.functions[name] = {
         type: "action",
         triggerType: triggerType,
         triggerArgument: triggerArgument,
-        input:  paramValues ? mapToObject(paramValues) : undefined,
-        }
+        input: paramValues ? getType(paramValues) : undefined
+      }
     })
 
     this.publicFunctions.forEach((fn: string) => {
       const paramValues = this.parameters.get(fn)
       const returnType = this.returnTypes.get(fn)
+
       manifest.abi.functions[fn] = {
         type: "publicFunction",
-        input: paramValues ? mapToObject(paramValues) : undefined,
-        output: returnType ? typeof(returnType) == "string" ? returnType : mapToObject(returnType) : "null"
+        input: paramValues ? getType(paramValues) : undefined,
+        output: returnType ? getType(returnType) : "null"
       }
     })
 
@@ -255,42 +266,93 @@ export default class Transformer extends AeTransformer {
   }
 }
 
-function mapToObject(map: Map<string, any>): Record<string, any> {
+function getType(type: typeValue): Record<string, any> | (Record<string, any> | string)[] | string {
+  if (type instanceof Array) {
+    return arrayToObject(type) 
+  }
+  else if (type instanceof Map) {
+    return mapToObject(type) 
+  }
+  return type
+} 
+
+function arrayToObject(type: (string | classType)[]) : (Record<string, any> | string)[] {
+  return type.map(x => {
+    if (x instanceof Map) {
+      return mapToObject(x)
+    }
+    return x
+  })
+}
+
+function mapToObject(type: classType): Record<string, any> {
   let obj: Record<string, any> = {}
-  for (let [key, value] of map) {
-    if (typeof value === 'object') {
-      obj[key] = mapToObject(value)
+  for (let [key, value] of type) {
+    if (value instanceof Array) {
+        obj[key as string] = value.map(loopOverMembers)
+    }
+    else if (typeof value === 'object') {
+        obj[key] = loopOverMembers(value);
     }
     else {
-      obj[key] = value
+        obj[key] = value;
     }
   }
-
   return obj
 }
 
-type classTypes = Map<string, string | classTypes>
+function loopOverMembers(type: classType | string): Record<string, any> | string {
+  if (typeof(type) == "object") {
+    return mapToObject(type)
+  }
+  return type
+}
 
-function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): classTypes | null {
-  const argClass = classes.find(x => utils.getName(x) == utils.getName(argType))
+type typeValue = string | classType | (string | classType)[]
+type classType = Map<string, typeValue>
+
+function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): classType | null {
+  const argClass = findArgType(classes, argType)
   if (argClass) {
-    let members: classTypes = new Map<string, classTypes>()
+    let members = new Map<string, typeValue>()
     argClass.members.forEach((member) => {
       const m = (member as FieldDeclaration).type
       if (m != null) {
         const namedNode = m as NamedTypeNode
         const typeName = utils.getTypeName(namedNode.name)
-        if (classes.find(x => utils.getName(x) == typeName)) {
-          const nestedType = getClassTypes(classes, namedNode)
-          if (nestedType) {
-            members.set(utils.getName(member), nestedType)
+        
+        if(typeName.includes("Array") && namedNode.typeArguments != null) {
+          const arrayTypes = namedNode.typeArguments
+            .map(x => {
+              const classType = getClassTypes(classes, x as NamedTypeNode)
+              return classType || utils.getName(x as NamedTypeNode)
+            })
+            .filter(x => x != null)
+
+          members.set(utils.getName(member), arrayTypes)
+        }
+        else {
+          if (findArgType(classes, namedNode)) {
+            const nestedType = getClassTypes(classes, namedNode)
+            if (nestedType) {
+              members.set(utils.getName(member), nestedType)
+            }
+          } else {
+            members.set(utils.getName(member), typeName)
           }
-        } else {
-          members.set(utils.getName(member), typeName)
         }
       }
-      return members
     })
+    return members
   }
   return null
+}
+
+function findArgType(classes: ClassDeclaration[], argType: NamedTypeNode): ClassDeclaration | undefined {
+  return classes.find(x => {
+    if (argType.isNullable) {
+      return utils.getName(argType).includes(utils.getName(x))
+    }
+    return utils.getName(x) == utils.getName(argType)
+  })
 }
