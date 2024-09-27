@@ -103,10 +103,21 @@ class AeTransformer extends TransformVisitor {
           if (contextArguments[1] != null) {
             const argType = contextArguments[1] as NamedTypeNode
             if (argType.typeArguments && argType.typeArguments.length > 0) {
-              const args = argType.typeArguments
-                .map(x => getClassTypes(this.classes, x as NamedTypeNode) || utils.getName(x))
-    
-              this.parameters.set(name, args)
+              if (utils.getName(argType).includes("Array")) {
+                const args = argType.typeArguments
+                  .map(x => getClassTypes(this.classes, x as NamedTypeNode) || utils.getName(x))
+      
+                this.parameters.set(name, args)
+              }
+              if (utils.getName(argType).includes("Map")) {
+                const key = argType.typeArguments[0]
+                const val = argType.typeArguments[1]
+                const nestedMap = new Map<string, typeValue>()
+                if (key && val) {
+                  nestedMap.set(utils.getName(key), getClassTypes(this.classes, val as NamedTypeNode) || utils.getName(val))
+                }
+                this.parameters.set(name, nestedMap)
+              }
             }
             else {
               const members = getClassTypes(this.classes, argType)
@@ -117,10 +128,20 @@ class AeTransformer extends TransformVisitor {
 
         const returnType = node.signature.returnType as NamedTypeNode
         if (returnType.typeArguments && returnType.typeArguments.length > 0) {
-          const args = returnType.typeArguments
-            .map(x => getClassTypes(this.classes, x as NamedTypeNode) || utils.getName(x))
-
-          this.returnTypes.set(name, args)
+          if (utils.getName(returnType).includes("Array")) {
+            const args = returnType.typeArguments
+              .map(x => getClassTypes(this.classes, x as NamedTypeNode) || utils.getName(x))
+            this.returnTypes.set(name, args)
+          }
+          if (utils.getName(returnType).includes("Map")) {
+            const key = returnType.typeArguments[0]
+            const val = returnType.typeArguments[1]
+            const nestedMap = new Map<string, typeValue>()
+            if (key && val) {
+              nestedMap.set(utils.getName(key), getClassTypes(this.classes, val as NamedTypeNode) || utils.getName(val))
+            }
+            this.returnTypes.set(name, nestedMap)
+          }
         }
         else {
           const customType = getClassTypes(this.classes, returnType)
@@ -320,8 +341,8 @@ function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): cla
       if (m != null) {
         const namedNode = m as NamedTypeNode
         const typeName = utils.getTypeName(namedNode.name)
-        
-        if(typeName.includes("Array") && namedNode.typeArguments != null) {
+
+        if(typeName == "Array" && namedNode.typeArguments != null) {
           const arrayTypes = namedNode.typeArguments
             .map(x => {
               const classType = getClassTypes(classes, x as NamedTypeNode)
@@ -330,6 +351,15 @@ function getClassTypes(classes: ClassDeclaration[], argType: NamedTypeNode): cla
             .filter(x => x != null)
 
           members.set(utils.getName(member), arrayTypes)
+        }
+        else if (typeName == "Map" && namedNode.typeArguments != null && namedNode.typeArguments.length == 2) {
+          const key = namedNode.typeArguments[0]
+          const val = namedNode.typeArguments[1]
+          const nestedMap = new Map<string, typeValue>()
+          if (key && val) {
+            nestedMap.set(utils.getName(key), getClassTypes(classes, val as NamedTypeNode) || utils.getName(val))
+          }
+          members.set(utils.getName(member), nestedMap)
         }
         else {
           if (findArgType(classes, namedNode)) {
