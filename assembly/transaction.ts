@@ -1,5 +1,5 @@
 import { Address, BigInt, Hex, PublicKey } from "./utils";
-import { JSON } from "json-as"
+import { JSON } from "json-as";
 
 export namespace TransactionType {
   export const Contract = "contract";
@@ -7,7 +7,7 @@ export namespace TransactionType {
   export const Data = "data";
   export const Token = "token";
 }
-  
+
 export type TransactionType = string;
 
 @json
@@ -15,7 +15,6 @@ class UCOTransfer {
   to!: Address;
   amount!: u64;
 }
-
 
 @json
 class TokenTransfer {
@@ -34,6 +33,7 @@ export class TransactionResult {
 @json
 export class Transaction extends TransactionResult {
   address!: Address;
+  genesis!: Address;
   previousPublicKey!: PublicKey;
 }
 
@@ -42,8 +42,8 @@ export class TransactionData {
   content: string = "";
   code: string | null;
   ledger: Ledger = { uco: { transfers: [] }, token: { transfers: [] } };
-  recipients: Recipient[] = []
-  ownerships: Ownership[] = []
+  recipients: Recipient[] = [];
+  ownerships: Ownership[] = [];
 }
 
 @json
@@ -66,13 +66,13 @@ class TokenLedger {
 class Recipient {
   address!: Address;
   action: string | null;
-  args: JSON.Raw
+  args: JSON.Raw;
 }
 
 @json
 class Ownership {
   secret!: Hex;
-  authorizedKeys: Map<PublicKey, Hex> = new Map<PublicKey, Hex>()
+  authorizedKeys: Map<PublicKey, Hex> = new Map<PublicKey, Hex>();
 }
 
 export class TransactionBuilder {
@@ -108,7 +108,7 @@ export class TransactionBuilder {
     to: Address,
     amount: BigInt,
     tokenAddress: Address,
-    tokenId: i32,
+    tokenId: i32
   ): TransactionBuilder {
     this.tokenTransfers.push({
       to: to,
@@ -119,17 +119,32 @@ export class TransactionBuilder {
     return this;
   }
 
-  addRawRecipient(address: Address, actionName: string, arg: JSON.Raw): TransactionBuilder {
-    this.recipients.push({ address: address, action: actionName, args: arg});
+  addRawRecipient(
+    address: Address,
+    actionName: string,
+    arg: JSON.Raw
+  ): TransactionBuilder {
+    this.recipients.push({ address: address, action: actionName, args: arg });
     return this;
   }
 
-  addRecipient<T>(address: Address, actionName: string, arg: T): TransactionBuilder {
-    this.recipients.push({ address: address, action: actionName, args: JSON.stringify([arg])});
+  addRecipient<T>(
+    address: Address,
+    actionName: string,
+    arg: T
+  ): TransactionBuilder {
+    this.recipients.push({
+      address: address,
+      action: actionName,
+      args: JSON.stringify([arg]),
+    });
     return this;
   }
 
-  addOwnership(secret: Hex, authorizedKeys: Map<PublicKey, Hex>): TransactionBuilder {
+  addOwnership(
+    secret: Hex,
+    authorizedKeys: Map<PublicKey, Hex>
+  ): TransactionBuilder {
     this.ownerships.push({ secret, authorizedKeys });
     return this;
   }
@@ -142,14 +157,14 @@ export class TransactionBuilder {
         code: this.code,
         ledger: {
           uco: {
-            transfers: this.ucoTransfers
+            transfers: this.ucoTransfers,
           },
           token: {
-            transfers: this.tokenTransfers
+            transfers: this.tokenTransfers,
           },
         },
         recipients: this.recipients,
-        ownerships: this.ownerships
+        ownerships: this.ownerships,
       },
     } as TransactionResult;
   }

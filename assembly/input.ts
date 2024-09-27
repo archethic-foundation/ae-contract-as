@@ -3,13 +3,14 @@ import { JSON } from "json-as";
 import { input_size, load_u8 } from "./env";
 import { Balance } from "./lib/chain";
 
-interface Object { }
-export interface NoArgs extends Object { }
+interface Object {}
+export interface NoArgs extends Object {}
 
 @json
 export class Context<T> {
   state!: T;
-  balance: Balance = { uco: 0, token: [] }
+  now!: u64;
+  balance: Balance = { uco: 0, token: [] };
 }
 
 @json
@@ -23,7 +24,10 @@ export class ContextWithParams<T, X> extends Context<T> {
 }
 
 @json
-export class ContextWithTransactionAndParams<T, X> extends ContextWithTransaction<T> {
+export class ContextWithTransactionAndParams<
+  T,
+  X
+> extends ContextWithTransaction<T> {
   arguments!: X;
 }
 
