@@ -1,7 +1,8 @@
-import { Transaction } from "./transaction";
+import { Transaction, TransactionData, TransactionType } from "./transaction";
 import { JSON } from "json-as";
 import { input_size, load_u8 } from "./env";
 import { Balance } from "./lib/chain";
+import { Address } from "./utils";
 
 interface Object {}
 export interface NoArgs extends Object {}
@@ -11,6 +12,15 @@ export class Context<T> {
   state!: T;
   now!: u64;
   balance: Balance = { uco: 0, token: [] };
+  contract!: ContractConstants;
+}
+
+@json
+export class ContractConstants {
+  address!: Address;
+  genesis!: Address;
+  type!: TransactionType;
+  data!: TransactionData;
 }
 
 @json
