@@ -20,7 +20,9 @@ class UCOTransfer {
 class TokenTransfer {
   to!: Address;
   amount!: u64;
+  @alias("token_address")
   tokenAddress!: Address;
+  @alias("token_id")
   tokenId!: i32;
 }
 
@@ -34,6 +36,7 @@ export class TransactionResult {
 export class Transaction extends TransactionResult {
   address!: Address;
   genesis!: Address;
+  @alias("previous_public_key")
   previousPublicKey!: PublicKey;
 }
 
