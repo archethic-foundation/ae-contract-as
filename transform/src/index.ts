@@ -227,7 +227,11 @@ export default class Transformer extends AeTransformer {
   afterParse(parser: Parser): void {
     this.parser = parser
 
-    const sources = parser.sources;
+    const sources = parser.sources
+      .filter(s => s.internalPath.includes("assembly/"))
+      .filter(s => s.sourceKind == SourceKind.User || s.sourceKind == SourceKind.UserEntry)
+      .sort((a, b) => a.internalPath.includes("assembly/index") ? 1 : -1)
+
     for (const source of sources) {
       if (source.sourceKind == SourceKind.User || source.sourceKind == SourceKind.UserEntry) {
         this.visit(source);
