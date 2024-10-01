@@ -1,4 +1,4 @@
-import { Address, BigInt, Hex, PublicKey } from "./utils";
+import { Address, Hex, PublicKey } from "./utils";
 import { JSON } from "json-as";
 
 export namespace TransactionType {
@@ -102,20 +102,20 @@ export class TransactionBuilder {
     return this;
   }
 
-  addUCOTransfer(to: Address, amount: BigInt): TransactionBuilder {
-    this.ucoTransfers.push({ to: to, amount: amount.toU64() });
+  addUCOTransfer(to: Address, amount: u64): TransactionBuilder {
+    this.ucoTransfers.push({ to: to, amount: amount });
     return this;
   }
 
   addTokenTransfer(
     to: Address,
-    amount: BigInt,
+    amount: u64,
     tokenAddress: Address,
     tokenId: i32
   ): TransactionBuilder {
     this.tokenTransfers.push({
       to: to,
-      amount: amount.toU64(),
+      amount: amount,
       tokenAddress: tokenAddress,
       tokenId: tokenId,
     });
