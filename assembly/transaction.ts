@@ -158,9 +158,9 @@ export class TransactionBuilder {
     return this;
   }
 
-  setContract(contract: Contract) {
+  setContract(contract: Contract): TransactionBuilder {
     this.contract = contract;
-    return
+    return this;
   }
 
   toTransactionResult(): TransactionResult {
