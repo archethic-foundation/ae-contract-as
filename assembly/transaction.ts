@@ -28,6 +28,7 @@ class TokenTransfer {
 
 @json
 export class TransactionResult {
+  version!: u32;
   type!: TransactionType;
   data!: TransactionData;
 }
@@ -47,7 +48,6 @@ export class Contract {
 @json
 export class TransactionData {
   content: string = "";
-  code: string = "";
   contract: Contract | null;
   ledger: Ledger = { uco: { transfers: [] }, token: { transfers: [] } };
   recipients: Recipient[] = [];
@@ -84,9 +84,9 @@ class Ownership {
 }
 
 export class TransactionBuilder {
+  version: u32 = 4;
   type: TransactionType = TransactionType.Contract;
   content: string = "";
-  code: string = "";
   contract: Contract | null;
   ucoTransfers: UCOTransfer[] = [];
   tokenTransfers: TokenTransfer[] = [];
@@ -100,11 +100,6 @@ export class TransactionBuilder {
 
   setContent(content: string): TransactionBuilder {
     this.content = content;
-    return this;
-  }
-
-  setCode(code: string): TransactionBuilder {
-    this.code = code;
     return this;
   }
 
@@ -165,10 +160,10 @@ export class TransactionBuilder {
 
   toTransactionResult(): TransactionResult {
     return {
+      version: this.version,
       type: this.type,
       data: {
         content: this.content,
-        code: this.code,
         contract: this.contract,
         ledger: {
           uco: {
