@@ -1,6 +1,6 @@
 {
   "name": "@archethicjs/ae-contract-as",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "",
   "bin": {
     "aewasm": "bin/aewasm.js"
