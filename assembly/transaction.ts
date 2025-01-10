@@ -41,14 +41,9 @@ export class Transaction extends TransactionResult {
   previousPublicKey!: PublicKey;
 }
 
-export class Contract {
-  bytecode: Hex;
-  manifest: JSON.Raw
-}
 @json
 export class TransactionData {
   content: string = "";
-  contract: Contract | null;
   ledger: Ledger = { uco: { transfers: [] }, token: { transfers: [] } };
   recipients: Recipient[] = [];
   ownerships: Ownership[] = [];
@@ -87,7 +82,6 @@ export class TransactionBuilder {
   version: u32 = 4;
   type: TransactionType = TransactionType.Contract;
   content: string = "";
-  contract: Contract | null;
   ucoTransfers: UCOTransfer[] = [];
   tokenTransfers: TokenTransfer[] = [];
   recipients: Recipient[] = [];
@@ -153,10 +147,6 @@ export class TransactionBuilder {
     return this;
   }
 
-  setContract(contract: Contract): TransactionBuilder {
-    this.contract = contract;
-    return this;
-  }
 
   toTransactionResult(): TransactionResult {
     return {
@@ -164,7 +154,6 @@ export class TransactionBuilder {
       type: this.type,
       data: {
         content: this.content,
-        contract: this.contract,
         ledger: {
           uco: {
             transfers: this.ucoTransfers,
