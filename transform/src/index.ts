@@ -223,6 +223,25 @@ class AeTransformer extends TransformVisitor {
   }
 }
 
+type Manifest = {
+  version: number,
+  abi: {
+    functions: Record<string, FunctionABI | ActionABI>,
+    state: Record<string, any>
+  }
+}
+
+type FunctionABI = {
+  type: string;
+  input?: Record<string, any> | string | (Record<string, any> | string)[],
+  output?: any
+}
+
+interface ActionABI extends FunctionABI {
+  triggerType: string,
+  triggerArgument?: string
+}
+
 export default class Transformer extends AeTransformer {
   afterParse(parser: Parser): void {
     this.parser = parser
@@ -238,34 +257,25 @@ export default class Transformer extends AeTransformer {
       }
     }
 
-    interface actionABI extends functionABI {
-      triggerType: string,
-      triggerArgument?: string
-    }
+    
 
-    type functionABI = {
-      type: string;
-      input?: Record<string, any> | string | (Record<string, any> | string)[],
-      output?: any
-    }
-
-    const manifest: {
-      abi: {
-        functions: Record<string, functionABI | actionABI>,
-        state: Record<string, any>
-      }
-    } = {
+    const manifest: Manifest = {
+      version: 1,
       abi: { state: {}, functions: {} }
     }
 
     this.triggers.forEach(({ name: name, type: triggerType, argument: triggerArgument }) => {
       const paramValues = this.parameters.get(name)
 
+      if (paramValues !== undefined && !(paramValues instanceof Map)) {
+        throw new Error("Public function input type must be an object")
+      }
+
       manifest.abi.functions[name] = {
         type: "action",
         triggerType: triggerType,
         triggerArgument: triggerArgument,
-        input: paramValues ? getType(paramValues) : undefined
+        input: paramValues ? mapToObject(paramValues) : "null"
       }
     })
 
@@ -273,9 +283,13 @@ export default class Transformer extends AeTransformer {
       const paramValues = this.parameters.get(fn)
       const returnType = this.returnTypes.get(fn)
 
+      if (paramValues !== undefined && !(paramValues instanceof Map)) {
+        throw new Error("Public function input type must be an object")
+      }
+
       manifest.abi.functions[fn] = {
         type: "publicFunction",
-        input: paramValues ? getType(paramValues) : undefined,
+        input: paramValues ? mapToObject(paramValues) : "null",
         output: returnType ? getType(returnType) : "null"
       }
     })
