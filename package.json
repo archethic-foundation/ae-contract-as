@@ -7,7 +7,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "scripts": {
     "prepublishOnly": "npm install --prefix transform && npm run build --prefix transform",
     "postpublish": "rm -rf transform/dist"
