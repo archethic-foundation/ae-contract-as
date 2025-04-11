@@ -224,7 +224,7 @@ class AeTransformer extends TransformVisitor {
 }
 
 type Manifest = {
-  version: number,
+  //version: number,
   abi: {
     functions: Record<string, FunctionABI | ActionABI>,
     state: Record<string, any>
@@ -260,7 +260,7 @@ export default class Transformer extends AeTransformer {
     
 
     const manifest: Manifest = {
-      version: 1,
+      //version: 1,
       abi: { state: {}, functions: {} }
     }
 
