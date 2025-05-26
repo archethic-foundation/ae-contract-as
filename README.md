@@ -31,7 +31,7 @@ npm install @archethicjs/ae-contract-as
 1. Initialize a new AssemblyScript project:
 
 ```bash
-npm create @archethicjs/create-ae-contract-as my-smart-contract
+npm create @archethicjs/ae-contract-as my-smart-contract
 cd my-smart-contract
 npm install
 ```
